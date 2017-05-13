@@ -4,11 +4,13 @@ The purpose of the survey was to provide valuable information about the digital 
   
 The survey can be found at here: <span style="color:blue"><u>[WMSS Teacher Technology Survey - Spring 2017](https://forms.office.com/Pages/ResponsePage.aspx?id=LGaFrd9pi0iFpI7ChwIywBwOEpdW4ixFvc3sphI3BmxUOTk2RDdKVFVMTUowUkk4WVhZQkpXSDJPRC4u)</u></span>
 
-The raw survey results used in this analysis can be found here: [Survey_Results.xlxs](https://www.dropbox.com/s/g73h8qny4pqgwvv/Survey_Results.xlsx?dl=0)
+The raw survey results used in this analysis can be found here: [Survey_Results.xlxs](https://github.com/TheBurningMap/WMSS_Grant/tree/master/Data/Survey_Results.xlsx?dl=0)
 
 This study is done in a reproducible research manner. All statistical analysis and figures below were created in the open source software package R.
 
-The code used to produce this anlysis can be found here: [Analysis.Rmd](https://www.dropbox.com/s/h18fc4ely70owxj/Analysis.Rmd?dl=0)
+The survey analysis can be found here: [Analysis.pdf](https://github.com/TheBurningMap/WMSS_Grant/tree/master/Analysis.pdf)
+
+The code used to produce this anlysis can be found here: [Analysis.Rmd](https://github.com/TheBurningMap/WMSS_Grant/tree/master/Analysis.Rmd?dl=0)
   
 For the sake of common language, the following term definitions are provided:
   
