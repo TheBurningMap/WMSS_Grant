@@ -1,37 +1,23 @@
-## Welcome to GitHub Pages
+## WMSS_Grant
 
-You can use the [editor on GitHub](https://github.com/TheBurningMap/WMSS_Grant/edit/master/README.md) to maintain and preview the content for your website in Markdown files.
+The purpose of the survey was to provide valuable information about the digital tools used in the classroom, the digital projects that are created or would like to be created by students, and the digital needs of both teachers and students.
+  
+The survey can be found at here: <span style="color:blue"><u>[WMSS Teacher Technology Survey - Spring 2017](https://forms.office.com/Pages/ResponsePage.aspx?id=LGaFrd9pi0iFpI7ChwIywBwOEpdW4ixFvc3sphI3BmxUOTk2RDdKVFVMTUowUkk4WVhZQkpXSDJPRC4u)</u></span>
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+The raw survey results used in this analysis can be found here: [Survey_Results.xlxs](https://www.dropbox.com/s/g73h8qny4pqgwvv/Survey_Results.xlsx?dl=0)
 
-### Markdown
+This study is done in a reproducible research manner. All statistical analysis and figures below were created in the open source software package R.
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+The code used to produce this anlysis can be found here: [Analysis.Rmd](https://www.dropbox.com/s/h18fc4ely70owxj/Analysis.Rmd?dl=0)
+  
+For the sake of common language, the following term definitions are provided:
+  
+Digital Tools:
+  ~ Any of the applications on Launchpad that the district has put in place/purchased
 
-```markdown
-Syntax highlighted code block
+Digital Projects:
+  ~ Any visible or tangible creations that are made by students using technology
 
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
-```
-
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/TheBurningMap/WMSS_Grant/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+Digital Needs:
+  ~ What specific training or programs do you need? 
+  
