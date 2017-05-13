@@ -1,0 +1,605 @@
+---
+title: "WMSS Teacher Survey Analysis - Spring 2017"
+author: "WMSS"
+date: '`r Sys.Date()`'
+output:
+  word_document:
+    fig_caption: yes
+    highlight: tango
+  html_document: default
+geometry: margin=0.5in
+fontsize: 10pt
+---
+The purpose of the survey was to provide valuable information about the digital tools used in the classroom, the digital projects that are created or would like to be created by students, and the digital needs of both teachers and students.
+  
+The survey can be found at here: <span style="color:blue"><u>[WMSS Teacher Technology Survey - Spring 2017](https://forms.office.com/Pages/ResponsePage.aspx?id=LGaFrd9pi0iFpI7ChwIywBwOEpdW4ixFvc3sphI3BmxUOTk2RDdKVFVMTUowUkk4WVhZQkpXSDJPRC4u)</u></span>
+
+The raw survey results used in this analysis can be found here: [Survey_Results.xlxs](https://www.dropbox.com/s/g73h8qny4pqgwvv/Survey_Results.xlsx?dl=0)
+
+This study is done in a reproducible research manner. All statistical analysis and figures below were created in the open source software package R.
+
+The code used to produce this anlysis can be found here: [Analysis.Rmd](https://www.dropbox.com/s/h18fc4ely70owxj/Analysis.Rmd?dl=0)
+  
+For the sake of common language, the following term definitions are provided:
+  
+Digital Tools:
+  ~ Any of the applications on Launchpad that the district has put in place/purchased
+
+Digital Projects:
+  ~ Any visible or tangible creations that are made by students using technology
+
+Digital Needs:
+  ~ What specific training or programs do you need? 
+  
+  
+
+```{r setup, echo = FALSE, warning=FALSE, message=FALSE, comment = NA}
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE, comment = NA)
+options(width = 90,stringsAsFactors = FALSE)
+library(knitr)
+library(dplyr)
+library(readxl)
+library(stringr)
+library(foreach)
+library(pander)
+library(Hmisc)
+library(qdap)
+library(tm)
+library(SnowballC)
+library(wordcloud)
+library(RColorBrewer)
+library(cowplot)
+
+rm(list = ls()) 
+Results <- as.data.frame(read_excel("Survey_Results.xlsx"))
+Terms <- as.data.frame(read_excel("Terms.xlsx"))
+mystopwords = c(tm::stopwords("english"),"yes","no","none", "using", "definitely")
+```
+
+## Summary
+
+Number of Responses as of `r Sys.Date()`: **`r nrow(Results)`**
+
+------
+
+## Question 1
+
+**What barriers prohibit you from incorporating technology use into your classroom?**
+
+```{r Q1, fig.width=7, fig.height=4}
+#Terms.Q1<-as.data.frame(filter(Terms, Terms$Question==1))
+
+Results.Q1<-strsplit(Results$Q1, ";")
+Results.Q1c <- as.data.frame(matrix(unlist(Results.Q1), byrow=T))
+Results.Q1c<-as.data.frame(table(Results.Q1c))
+Results.Q1c$Percentage<-round(Results.Q1c$Freq/length(Results$Q1),2)
+colnames(Results.Q1c)[1] <- "Q1 Answers"
+colnames(Results.Q1c)[2] <- "Frequency"
+
+Results.Q1c <- Results.Q1c[order(-Results.Q1c$Frequency),] 
+#knitr::kable(Results.Q1c,row.names = FALSE, caption = "Table 1.", format = "markdown")
+
+Results.Q1c<-as.data.frame(filter(Results.Q1c, Results.Q1c$Frequency>1))
+x=Results.Q1c$`Q1 Answers`
+#ggplot(Results.Q1c, aes(x=reorder(Results.Q1c$`Q1 Answers`, -Results.Q1c$Frequency), y=Results.Q1c$Frequency, fill=Results.Q1c$`Q1 Answers`)) + 
+#  geom_bar(colour="black", stat='identity') + 
+#  theme(legend.position="none",axis.text.x = element_text(size=10)) +
+#   xlab("Responses") + ylab("Frequency") +
+#   scale_x_discrete(labels = function(x) str_wrap(x, width = 20)) +
+#  geom_text(aes(label=paste(Results.Q1c$Percentage*100, "%", "\n", "n=", Results.Q1c$Frequency)), vjust=1.1, color='black') +
+#    ggtitle("", subtitle = "Q1")
+
+
+```
+------
+## Question 2
+
+**Would you incorporate the use of technology in the classroom more often if your students had individual access to a laptop every day (one to one ratio)?**
+
+```{r Q2, fig.width=7, fig.height=4}
+Terms.Q2<-as.data.frame(filter(Terms, Terms$Question==2))
+
+Results.Q2<-strsplit(Results$Q2, ";")
+Results.Q2c <- as.data.frame(matrix(unlist(Results.Q2), byrow=T))
+
+Results.Q2c<-as.data.frame(table(Results.Q2c))
+Results.Q2c$Percentage<-round(Results.Q2c$Freq/length(Results$Q2),2)
+colnames(Results.Q2c)[1] <- "Q2 Answers"
+colnames(Results.Q2c)[2] <- "Frequency"
+
+Results.Q2c <- Results.Q2c[order(-Results.Q2c$Frequency),] 
+knitr::kable(Results.Q2c,row.names = FALSE, caption = "Table 2.", format = "markdown")
+
+x=Results.Q2c$`Q2 Answers`
+ggplot(Results.Q2c, aes(x=reorder(Results.Q2c$`Q2 Answers`, -Results.Q2c$Frequency), y=Results.Q2c$Frequency, fill=Results.Q2c$`Q2 Answers`)) + 
+  geom_bar(colour="black", stat='identity') + 
+  theme(legend.position="none",axis.text.x = element_text(size=10)) +
+   xlab("Responses") + ylab("Frequency") +
+   scale_x_discrete(labels = function(x) str_wrap(x, width = 20)) +
+  geom_text(aes(label=paste(Results.Q2c$Percentage*100, "%", "\n", "n=", Results.Q2c$Frequency)), vjust=1.1, color='black') +
+      ggtitle("", subtitle = "Q2")
+
+
+
+
+```
+------
+## Question 3
+
+**Which of the following BPS supported Digital Tools do you currently use on a weekly basis?**
+
+```{r Q3, fig.width=7, fig.height=4}
+Terms.Q3<-as.data.frame(filter(Terms, Terms$Question==3))
+
+Results.Q3<-strsplit(Results$Q3, ";")
+Results.Q3c <- as.data.frame(matrix(unlist(Results.Q3), byrow=T))
+
+Results.Q3c<-as.data.frame(table(Results.Q3c))
+Results.Q3c$Percentage<-round(Results.Q3c$Freq/length(Results$Q3),2)
+colnames(Results.Q3c)[1] <- "Q3 Answers"
+colnames(Results.Q3c)[2] <- "Frequency"
+
+Results.Q3c <- Results.Q3c[order(-Results.Q3c$Frequency),] 
+knitr::kable(Results.Q3c,row.names = FALSE, caption = "Table 3.", format = "markdown")
+
+Results.Q3c<-as.data.frame(filter(Results.Q3c, Results.Q3c$Frequency>4))
+x=Results.Q3c$`Q3 Answers`
+ggplot(Results.Q3c, aes(x=reorder(Results.Q3c$`Q3 Answers`, -Results.Q3c$Frequency), y=Results.Q3c$Frequency, fill=Results.Q3c$`Q3 Answers`)) + 
+  geom_bar(colour="black", stat='identity') + 
+  theme(legend.position="none",axis.text.x = element_text(size=10)) +
+   xlab("Responses") + ylab("Frequency") +
+   scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) +
+  geom_text(aes(label=paste(Results.Q3c$Percentage*100, "%", "\n", "n=", Results.Q3c$Frequency)), vjust=1.1, color='black') +
+      ggtitle("", subtitle = "Q3")
+
+googlecount<-length(grep("\\<Google\\>", Results.Q3))
+googlepercent<-round((googlecount/nrow(Results))*100,2)
+print(paste("Google Digital Tools (Google Apps, Classroom, Docs, Forms, or Slides) were selected by ",googlecount, " of ", nrow(Results), " respondents (",googlepercent,"%).", sep=""))
+
+googletotal<-termco(Results.Q3, match.list = "google", ignore.case = TRUE)
+googletermscount<-length(grep("\\<Google\\>", Terms.Q3$Answer))*nrow(Results)
+googletotalpercent<-round((googletotal$raw$google/googletermscount)*100,2)
+print(paste("Google Digital Tools (Google Apps, Classroom, Docs, Forms, or Slides) were selected ",googletotal$raw$google, " of a possible ",googletermscount, " selections (",googletotalpercent,"%).", sep=""))
+
+microsoftcount<-length(grep("\\<Microsoft\\>", Results.Q3, ignore.case = TRUE))
+officecount<-length(grep("\\<Office\\>", Results.Q3, ignore.case = TRUE))
+microsoftcount<-microsoftcount+officecount
+microsoftpercent<-round((microsoftcount/nrow(Results))*100,2)
+print(paste("Microsoft Digital Tools (Office 365, Office Sway, Office One Note, Office Mix, Microsoft Moviemaker) were selected by ",microsoftcount, " of ", nrow(Results), " respondents (",microsoftpercent,"%).", sep=""))
+
+microsofttotal<-termco(Results.Q3, match.list = "microsoft", ignore.case = TRUE)
+officetotal<-termco(Results.Q3, match.list = "office", ignore.case = TRUE)
+microsofttotal<-microsofttotal$raw$microsoft+officetotal$raw$office
+microsofttermscount<-length(grep("\\<microsoft\\>", Terms.Q3$Answer, ignore.case = TRUE))*nrow(Results)
+officetermscount<-length(grep("\\<office\\>", Terms.Q3$Answer, ignore.case = TRUE))*nrow(Results)
+microsofttermscount<-microsofttermscount+officetermscount
+microsofttotalpercent<-round((microsofttotal/microsofttermscount)*100,2)
+print(paste("Microsoft Digital Tools (Office 365, Office Sway, Office One Note, Office Mix, Microsoft Moviemaker) were selected ",microsofttotal, " of a possible ",microsofttermscount, " selections (",microsofttotalpercent,"%).", sep=""))
+
+
+Discoverycount<-length(grep("\\<Discovery\\>", Results.Q3))
+Discoverypercent<-round((Discoverycount/nrow(Results))*100,2)
+print(paste("Discovery Education Digital Tools (Boardbuilder, videos/content) were selected by ",Discoverycount, " of ", nrow(Results), " respondents (",Discoverypercent,"%).", sep=""))
+
+Discoverytotal<-termco(Results.Q3, match.list = "Discovery", ignore.case = TRUE)
+Discoverytermscount<-length(grep("\\<Discovery\\>", Terms.Q3$Answer))*nrow(Results)
+Discoverytotalpercent<-round((Discoverytotal$raw$Discovery/Discoverytermscount)*100,2)
+print(paste("Discovery Education Digital Tools (Boardbuilder, videos/content) were selected ",Discoverytotal$raw$Discovery, " of a possible ",Discoverytermscount, " selections (",Discoverytotalpercent,"%).", sep=""))
+
+```
+------
+## Question 4
+
+**Which of the following BPS supported Digital Tools would you prefer to receive training on?**
+
+```{r Q4, fig.width=7, fig.height=4}
+Terms.Q4<-as.data.frame(filter(Terms, Terms$Question==4))
+
+Results.Q4<-strsplit(Results$Q4, ";")
+Results.Q4c <- as.data.frame(matrix(unlist(Results.Q4), byrow=T))
+
+Results.Q4c<-as.data.frame(table(Results.Q4c))
+Results.Q4c$Percentage<-round(Results.Q4c$Freq/length(Results$Q4),2)
+colnames(Results.Q4c)[1] <- "Q4 Answers"
+colnames(Results.Q4c)[2] <- "Frequency"
+
+Results.Q4c <- Results.Q4c[order(-Results.Q4c$Frequency),] 
+knitr::kable(Results.Q4c,row.names = FALSE, caption = "Table 4.", format = "markdown")
+
+Results.Q4c<-as.data.frame(filter(Results.Q4c, Results.Q4c$Frequency>4))
+x=Results.Q4c$`Q4 Answers`
+ggplot(Results.Q4c, aes(x=reorder(Results.Q4c$`Q4 Answers`, -Results.Q4c$Frequency), y=Results.Q4c$Frequency, fill=Results.Q4c$`Q4 Answers`)) + 
+  geom_bar(colour="black", stat='identity') + 
+  theme(legend.position="none",axis.text.x = element_text(size=7)) +
+   xlab("Responses") + ylab("Frequency") +
+   scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) +
+  geom_text(aes(label=paste(Results.Q4c$Percentage*100, "%", "\n", "n=", Results.Q4c$Frequency)), vjust=1.1, color='black') +
+      ggtitle("", subtitle = "Q4")
+
+googlecount<-length(grep("\\<Google\\>", Results.Q4))
+googlepercent<-round((googlecount/nrow(Results))*100,2)
+print(paste("Google Digital Tools (Google Apps, Classroom, Docs, Forms, or Slides) were selected by ",googlecount, " of ", nrow(Results), " respondents (",googlepercent,"%).", sep=""))
+
+googletotal<-termco(Results.Q4, match.list = "google", ignore.case = TRUE)
+googletermscount<-length(grep("\\<Google\\>", Terms.Q4$Answer))*nrow(Results)
+googletotalpercent<-round((googletotal$raw$google/googletermscount)*100,2)
+print(paste("Google Digital Tools (Google Apps, Classroom, Docs, Forms, or Slides) were selected ",googletotal$raw$google, " of a possible ",googletermscount, " selections (",googletotalpercent,"%).", sep=""))
+
+microsoftcount<-length(grep("\\<Microsoft\\>", Results.Q4, ignore.case = TRUE))
+officecount<-length(grep("\\<Office\\>", Results.Q4, ignore.case = TRUE))
+microsoftcount<-microsoftcount+officecount
+microsoftpercent<-round((microsoftcount/nrow(Results))*100,2)
+print(paste("Microsoft Digital Tools (Office 365, Office Sway, Office One Note, Office Mix, Microsoft Moviemaker) were selected by ",microsoftcount, " of ", nrow(Results), " respondents (",microsoftpercent,"%).", sep=""))
+
+microsofttotal<-termco(Results.Q4, match.list = "microsoft", ignore.case = TRUE)
+officetotal<-termco(Results.Q4, match.list = "office", ignore.case = TRUE)
+microsofttotal<-microsofttotal$raw$microsoft+officetotal$raw$office
+microsofttermscount<-length(grep("\\<microsoft\\>", Terms.Q4$Answer, ignore.case = TRUE))*nrow(Results)
+officetermscount<-length(grep("\\<office\\>", Terms.Q4$Answer, ignore.case = TRUE))*nrow(Results)
+microsofttermscount<-microsofttermscount+officetermscount
+microsofttotalpercent<-round((microsofttotal/microsofttermscount)*100,2)
+print(paste("Microsoft Digital Tools (Office 365, Office Sway, Office One Note, Office Mix, Microsoft Moviemaker) were selected ",microsofttotal, " of a possible ",microsofttermscount, " selections (",microsofttotalpercent,"%).", sep=""))
+
+Discoverycount<-length(grep("\\<Discovery\\>", Results.Q4))
+Discoverypercent<-round((Discoverycount/nrow(Results))*100,2)
+print(paste("Discovery Education Digital Tools (Boardbuilder, videos/content) were selected by ",Discoverycount, " of ", nrow(Results), " respondents (",Discoverypercent,"%).", sep=""))
+
+Discoverytotal<-termco(Results.Q4, match.list = "Discovery", ignore.case = TRUE)
+Discoverytermscount<-length(grep("\\<Discovery\\>", Terms.Q4$Answer))*nrow(Results)
+Discoverytotalpercent<-round((Discoverytotal$raw$Discovery/Discoverytermscount)*100,2)
+print(paste("Discovery Education Digital Tools (Boardbuilder, videos/content) were selected ",Discoverytotal$raw$Discovery, " of a possible ",Discoverytermscount, " selections (",Discoverytotalpercent,"%).", sep=""))
+
+```
+------
+## Question 5
+
+**Based on the previous question, what would you say is a priority for you to receive training on first?**
+
+```{r Q5, fig.width=7, fig.height=4}
+Terms.Q5<-as.data.frame(filter(Terms, Terms$Question==5))
+
+Results.Q5<-strsplit(Results$Q5, ";")
+Results.Q5c <- as.data.frame(matrix(unlist(Results.Q5), byrow=T))
+
+Results.Q5c<-as.data.frame(table(Results.Q5c))
+Results.Q5c$Percentage<-round(Results.Q5c$Freq/length(Results$Q5),2)
+colnames(Results.Q5c)[1] <- "Q5 Answers"
+colnames(Results.Q5c)[2] <- "Frequency"
+
+Results.Q5c <- Results.Q5c[order(-Results.Q5c$Frequency),] 
+knitr::kable(Results.Q5c,row.names = FALSE, caption = "Table 5.", format = "markdown")
+
+Results.Q5c<-as.data.frame(filter(Results.Q5c, Results.Q5c$Frequency>1))
+x=Results.Q5c$`Q5 Answers`
+ggplot(Results.Q5c, aes(x=reorder(Results.Q5c$`Q5 Answers`, -Results.Q5c$Frequency), y=Results.Q5c$Frequency, fill=Results.Q5c$`Q5 Answers`)) + 
+  geom_bar(colour="black", stat='identity') + 
+  theme(legend.position="none",axis.text.x = element_text(size=10)) +
+   xlab("Responses") + ylab("Frequency") +
+   scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) +
+  geom_text(aes(label=paste(Results.Q5c$Percentage*100, "%", "\n", "n=", Results.Q5c$Frequency)), vjust=1.1, color='black') +
+      ggtitle("", subtitle = "Q5")
+
+```
+
+## Question 6
+
+**When would technology training on the above mentioned Digital Tool be most convenient for you?**
+
+```{r Q6, fig.width=7, fig.height=4}
+Terms.Q6<-as.data.frame(filter(Terms, Terms$Question==6))
+
+Results.Q6<-strsplit(Results$Q6, ";")
+Results.Q6c <- as.data.frame(matrix(unlist(Results.Q6), byrow=T))
+
+Results.Q6c<-as.data.frame(table(Results.Q6c))
+Results.Q6c$Percentage<-round(Results.Q6c$Freq/length(Results$Q6),2)
+colnames(Results.Q6c)[1] <- "Q6 Answers"
+colnames(Results.Q6c)[2] <- "Frequency"
+
+Results.Q6c <- Results.Q6c[order(-Results.Q6c$Frequency),] 
+knitr::kable(Results.Q6c,row.names = FALSE, caption = "Table 6.", format = "markdown")
+
+ggplot(Results.Q6c, aes(x=reorder(Results.Q6c$`Q6 Answers`, -Results.Q6c$Frequency), y=Results.Q6c$Frequency, fill=Results.Q6c$`Q6 Answers`)) + 
+  geom_bar(colour="black", stat='identity') + 
+  theme(legend.position="none",axis.text.x = element_text(size=10)) +
+   xlab("Responses") + ylab("Frequency") +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 15)) +
+  geom_text(aes(label=paste(Results.Q6c$Percentage*100, "%", "\n", "n=", Results.Q6c$Frequency)), vjust=1.1, color='black') +
+      ggtitle("", subtitle = "Q6")
+
+```
+
+## Question 7
+
+**What type of Digital Projects that you believe incorporate technology creatively do your students CURRENTLY create using any of the BPS Digital Tools?**
+
+```{r Q7, echo=FALSE, results='asis', fig.width=7, fig.height=4}
+Terms.Q7<-as.data.frame(filter(Terms, Terms$Question==7))
+
+Results.Q7c <- as.data.frame(matrix(unlist(Results$Q7), byrow=T))
+#Results.Q7c = Results.Q7c[!is.na(Results.Q7c)]
+#Results.Q7c<-str_replace_all(Results.Q7c, "[\r\n]" , "")
+Results.Q7c<-as.data.frame(Results.Q7c)
+colnames(Results.Q7c)[1] <- "Q7 Answers"
+
+kable(Results.Q7c,row.names = TRUE, caption = "Table 7.", format = "markdown")
+
+
+
+Results.Q7f<-as.data.frame(freq_terms(Results.Q7c$`Q7 Answers`, 10, stopwords = mystopwords))
+wordcount<-word_count(Results.Q7c$`Q7 Answers`, byrow = FALSE)
+kable(Results.Q7f,row.names = FALSE, caption = paste("Table 8. - Most Common Words out of ", wordcount, " words."), format = "markdown")
+
+ggplot(Results.Q7f, aes(x=reorder(Results.Q7f$WORD, -Results.Q7f$FREQ), y=Results.Q7f$FREQ, fill=Results.Q7f$WORD)) + 
+  geom_bar(colour="black", stat='identity') + 
+  theme(legend.position="none",axis.text.x = element_text(size=10)) +
+   xlab("Words") + ylab("Frequency") +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 5)) +
+  geom_text(aes(label=paste("n=", Results.Q7f$FREQ)), vjust=1.1, color='black') +
+  theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
+  ggtitle("10 most common words", subtitle = paste("n=", wordcount))
+
+wordcloud(words = Results.Q7f$WORD, freq = Results.Q7f$FREQ, min.freq = 1,
+          max.words=200, random.order=FALSE, rot.per=0.35, 
+          colors=brewer.pal(8, "Dark2"))
+
+```
+
+## Question 8
+
+**What type of Digital Projects that you believe incorporate technology creatively WOULD your students create using any of the BPS Digital Tools if you had a 1:1 student to laptop ratio?**
+
+```{r Q8, echo=FALSE, results='asis', fig.width=7, fig.height=4}
+Terms.Q8<-as.data.frame(filter(Terms, Terms$Question==8))
+
+Results.Q8c <- as.data.frame(matrix(unlist(Results$Q8), byrow=T))
+#Results.Q8c = Results.Q8c[!is.na(Results.Q8c)]
+#Results.Q8c<-str_replace_all(Results.Q8c, "[\r\n]" , "")
+
+Results.Q8c<-as.data.frame(Results.Q8c)
+colnames(Results.Q8c)[1] <- "Q8 Answers"
+
+#print(Results.Q8c, row.names=TRUE)
+kable(Results.Q8c,row.names = TRUE, caption = "Table 9.", format = "markdown")
+
+
+Results.Q8f<-as.data.frame(freq_terms(Results.Q8c$`Q8 Answers`, 10, stopwords = mystopwords))
+wordcount<-word_count(Results.Q8c$`Q8 Answers`, byrow = FALSE)
+kable(Results.Q8f,row.names = FALSE, caption = paste("Table 10. - Most Common Words out of ", wordcount, " words."), format = "markdown")
+
+ggplot(Results.Q8f, aes(x=reorder(Results.Q8f$WORD, -Results.Q8f$FREQ), y=Results.Q8f$FREQ, fill=Results.Q8f$WORD)) + 
+  geom_bar(colour="black", stat='identity') + 
+  theme(legend.position="none") +
+   xlab("Words") + ylab("Frequency") +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 5)) +
+  geom_text(aes(label=paste("n=", Results.Q8f$FREQ)), vjust=1.1, color='black') +
+  theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
+  ggtitle("10 most common words", subtitle = paste("n=", wordcount))
+
+wordcloud(words = Results.Q8f$WORD, freq = Results.Q8f$FREQ, min.freq = 1,
+          max.words=200, random.order=FALSE, rot.per=0.35, 
+          colors=brewer.pal(8, "Dark2"))
+
+```
+
+## Question 9
+
+**What Digital Needs do you have in order to make these Digital Projects a success?**
+
+```{r Q9, echo=FALSE, results='asis', fig.width=7, fig.height=4}
+Terms.Q9<-as.data.frame(filter(Terms, Terms$Question==9))
+
+Results.Q9c <- as.data.frame(matrix(unlist(Results$Q9), byrow=T))
+#Results.Q9c = Results.Q9c[!is.na(Results.Q9c)]
+#Results.Q9c<-str_replace_all(Results.Q9c, "[\r\n]" , "")
+
+Results.Q9c<-as.data.frame(Results.Q9c)
+colnames(Results.Q9c)[1] <- "Q9 Answers"
+
+kable(Results.Q9c,row.names = TRUE, caption = "Table 11.", format = "markdown")
+
+Results.Q9f<-as.data.frame(freq_terms(Results.Q9c$`Q9 Answers`, 10, stopwords = mystopwords))
+wordcount<-word_count(Results.Q9c$`Q9 Answers`, byrow = FALSE)
+kable(Results.Q9f,row.names = FALSE, caption = paste("Table 12. - Most Common Words out of ", wordcount, " words."), format = "markdown")
+
+ggplot(Results.Q9f, aes(x=reorder(Results.Q9f$WORD, -Results.Q9f$FREQ), y=Results.Q9f$FREQ, fill=Results.Q9f$WORD)) + 
+  geom_bar(colour="black", stat='identity') + 
+  theme(legend.position="none") +
+   xlab("Words") + ylab("Frequency") +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 5)) +
+  geom_text(aes(label=paste("n=", Results.Q9f$FREQ)), vjust=1.1, color='black') +
+  theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
+  ggtitle("10 most common words", subtitle = paste("n=", wordcount))
+
+wordcloud(words = Results.Q9f$WORD, freq = Results.Q9f$FREQ, min.freq = 1,
+          max.words=200, random.order=FALSE, rot.per=0.35, 
+          colors=brewer.pal(8, "Dark2"))
+```
+
+## Question 10
+
+**Are you familiar with Blended Learning?**
+
+```{r Q10, fig.width=7, fig.height=4}
+Terms.Q10<-as.data.frame(filter(Terms, Terms$Question==10))
+
+Results.Q10<-strsplit(Results$Q10, ";")
+Results.Q10c <- as.data.frame(matrix(unlist(Results.Q10), byrow=T))
+Results.Q10c = Results.Q10c[!is.na(Results.Q10c)]
+Results.Q10c<-as.data.frame(table(Results.Q10c))
+Results.Q10c$Percentage<-round(Results.Q10c$Freq/length(Results$Q10),2)
+colnames(Results.Q10c)[1] <- "Q10 Answers"
+colnames(Results.Q10c)[2] <- "Frequency"
+
+Results.Q10c <- Results.Q10c[order(-Results.Q10c$Frequency),] 
+knitr::kable(Results.Q10c,row.names = FALSE, caption = "Table 13.")
+
+x=Results.Q10c$`Q10 Answers`
+ggplot(Results.Q10c, aes(x=Results.Q10c$`Q10 Answers`, y=Results.Q10c$Frequency, fill=Results.Q10c$`Q10 Answers`)) + 
+  geom_bar(colour="black", stat='identity') + 
+  theme(legend.position="none",axis.text.x = element_text(size=10)) +
+   xlab("Responses") + ylab("Frequency") +
+   scale_x_discrete(labels = function(x) str_wrap(x, width = 20)) +
+  geom_text(aes(label=paste(Results.Q10c$Percentage*100, "%", "\n", "n=", Results.Q10c$Frequency)), vjust=1.1, color='black')
+
+```
+
+## Question 11
+
+**Would you be willing to be a part of a technology committee at our school?**
+
+```{r Q11, fig.width=7, fig.height=4}
+Terms.Q11<-as.data.frame(filter(Terms, Terms$Question==11))
+
+Results.Q11<-strsplit(Results$Q11, ";")
+Results.Q11c <- as.data.frame(matrix(unlist(Results.Q11), byrow=T))
+Results.Q11c = Results.Q11c[!is.na(Results.Q11c)]
+Results.Q11c<-as.data.frame(table(Results.Q11c))
+Results.Q11c$Percentage<-round(Results.Q11c$Freq/length(Results$Q11),2)
+colnames(Results.Q11c)[1] <- "Q11 Answers"
+colnames(Results.Q11c)[2] <- "Frequency"
+
+Results.Q11c <- Results.Q11c[order(-Results.Q11c$Frequency),] 
+knitr::kable(Results.Q11c,row.names = FALSE, caption = "Table 14.")
+
+x=Results.Q11c$`Q11 Answers`
+ggplot(Results.Q11c, aes(x=Results.Q11c$`Q11 Answers`, y=Results.Q11c$Frequency, fill=Results.Q11c$`Q11 Answers`)) + 
+  geom_bar(colour="black", stat='identity') + 
+  theme(legend.position="none",axis.text.x = element_text(size=10)) +
+   xlab("Responses") + ylab("Frequency") +
+   scale_x_discrete(labels = function(x) str_wrap(x, width = 20)) +
+  geom_text(aes(label=paste(Results.Q11c$Percentage*100, "%", "\n", "n=", Results.Q11c$Frequency)), vjust=1.1, color='black')
+
+```
+
+## Question 12
+
+**Are you interested in a technology integrator conducting a workshop on some innovative ways to integrate technology?**
+
+```{r Q12, fig.width=7, fig.height=4}
+Terms.Q12<-as.data.frame(filter(Terms, Terms$Question==12))
+
+Results.Q12<-strsplit(Results$Q12, ";")
+Results.Q12c <- as.data.frame(matrix(unlist(Results.Q12), byrow=T))
+Results.Q12c = Results.Q12c[!is.na(Results.Q12c)]
+Results.Q12c<-as.data.frame(table(Results.Q12c))
+Results.Q12c$Percentage<-round(Results.Q12c$Freq/length(Results$Q12),2)
+colnames(Results.Q12c)[1] <- "Q12 Answers"
+colnames(Results.Q12c)[2] <- "Frequency"
+
+Results.Q12c <- Results.Q12c[order(-Results.Q12c$Frequency),] 
+knitr::kable(Results.Q12c,row.names = FALSE, caption = "Table 15.")
+
+x=Results.Q12c$`Q12 Answers`
+ggplot(Results.Q12c, aes(x=Results.Q12c$`Q12 Answers`, y=Results.Q12c$Frequency, fill=Results.Q12c$`Q12 Answers`)) + 
+  geom_bar(colour="black", stat='identity') + 
+  theme(legend.position="none",axis.text.x = element_text(size=10)) +
+   xlab("Responses") + ylab("Frequency") +
+   scale_x_discrete(labels = function(x) str_wrap(x, width = 20)) +
+  geom_text(aes(label=paste(Results.Q12c$Percentage*100, "%", "\n", "n=", Results.Q12c$Frequency)), vjust=1.1, color='black')
+
+```
+
+## Further Analysis
+
+**Word Analysis of Questions 3 and 4 combined.**
+
+```{r Q3:4, fig.width=7, fig.height=4}
+
+Terms.Q3<-as.data.frame(filter(Terms, Terms$Question==3))
+
+
+Results.Q3Common<-as.data.frame(freq_terms(Results.Q3, 20, stopwords = mystopwords))
+wordcount<-word_count(Results.Q3, byrow = FALSE)
+
+
+
+Results.Q4Common<-as.data.frame(freq_terms(Results.Q4, 20, stopwords = mystopwords))
+wordcount<-word_count(Results.Q4, byrow = FALSE)
+
+
+kable(Results.Q3Common,row.names = FALSE, caption = paste("Table 16. - Q3 Most Common Words out of ", wordcount, " words."), format = "markdown")
+kable(Results.Q4Common,row.names = FALSE, caption = paste("Table 17. - Q4 Most Common Words out of ", wordcount, " words."), format = "markdown")
+
+
+Q3plot<-ggplot(Results.Q3Common, aes(x=reorder(Results.Q3Common$WORD, -Results.Q3Common$FREQ), y=Results.Q3Common$FREQ, fill=Results.Q3Common$WORD)) + 
+  geom_bar(colour="black", stat='identity') + 
+  theme(legend.position="none") +
+   xlab("Digital Tools in Use") + ylab("Frequency") +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 5)) +
+  theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
+   ylim(0,40)+
+  ggtitle("20 most common words", subtitle = paste("n=", wordcount))
+
+Q4plot<-ggplot(Results.Q4Common, aes(x=reorder(Results.Q4Common$WORD, -Results.Q4Common$FREQ), y=Results.Q4Common$FREQ, fill=Results.Q4Common$WORD)) + 
+  geom_bar(colour="black", stat='identity') + 
+  theme(legend.position="none") +
+   xlab("Training Needed") + ylab("Frequency") +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 5)) +
+  theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
+  ylim(0,40)+
+  ggtitle("20 most common words", subtitle = paste("n=", wordcount))
+
+
+plot_grid(Q3plot, Q4plot, labels=c("Q3", "Q4"), nrow = 1, align = 'h')
+
+par(mfrow=c(2,2))
+wordcloud(words = Results.Q3Common$WORD, freq = Results.Q3Common$FREQ, min.freq = 1,
+          max.words=20, random.order=FALSE, rot.per=0.35, 
+          colors=brewer.pal(8, "Dark2"), main="Q3")
+
+wordcloud(words = Results.Q4Common$WORD, freq = Results.Q4Common$FREQ, min.freq = 1,
+          max.words=20, random.order=FALSE, rot.per=0.35, 
+          colors=brewer.pal(8, "Dark2"), main="Q3")
+
+googlecount<-length(grep("\\<Google\\>", Results.Q3))
+googlepercent<-round((googlecount/nrow(Results))*100,2)
+print(paste("Google Digital Tools (Google Apps, Classroom, Docs, Forms, or Slides) were selected by ",googlecount, " of ", nrow(Results), " respondents (",googlepercent,"%).", sep=""))
+
+googletotal<-termco(Results.Q3, match.list = "google", ignore.case = TRUE)
+googletermscount<-length(grep("\\<Google\\>", Terms.Q3$Answer))*nrow(Results)
+googletotalpercent<-round((googletotal$raw$google/googletermscount)*100,2)
+print(paste("Google Digital Tools (Google Apps, Classroom, Docs, Forms, or Slides) were selected ",googletotal$raw$google, " of a possible ",googletermscount, " selections (",googletotalpercent,"%).", sep=""))
+
+microsoftcount<-length(grep("\\<Microsoft\\>", Results.Q3, ignore.case = TRUE))
+officecount<-length(grep("\\<Office\\>", Results.Q3, ignore.case = TRUE))
+microsoftcount<-microsoftcount+officecount
+microsoftpercent<-round((microsoftcount/nrow(Results))*100,2)
+print(paste("Microsoft Digital Tools (Office 365, Office Sway, Office One Note, Office Mix, Microsoft Moviemaker) were selected by ",microsoftcount, " of ", nrow(Results), " respondents (",microsoftpercent,"%).", sep=""))
+
+microsofttotal<-termco(Results.Q3, match.list = "microsoft", ignore.case = TRUE)
+officetotal<-termco(Results.Q3, match.list = "office", ignore.case = TRUE)
+microsofttotal<-microsofttotal$raw$microsoft+officetotal$raw$office
+microsofttermscount<-length(grep("\\<microsoft\\>", Terms.Q3$Answer, ignore.case = TRUE))*nrow(Results)
+officetermscount<-length(grep("\\<office\\>", Terms.Q3$Answer, ignore.case = TRUE))*nrow(Results)
+microsofttermscount<-microsofttermscount+officetermscount
+microsofttotalpercent<-round((microsofttotal/microsofttermscount)*100,2)
+print(paste("Microsoft Digital Tools (Office 365, Office Sway, Office One Note, Office Mix, Microsoft Moviemaker) were selected ",microsofttotal, " of a possible ",microsofttermscount, " selections (",microsofttotalpercent,"%).", sep=""))
+
+
+
+
+```
+
+```{r Q7:9, fig.width=7, fig.height=4}
+
+Results.Common<-as.data.frame(freq_terms(Results[,7:9], 20, stopwords = mystopwords))
+wordcount<-word_count(Results, byrow = FALSE)
+kable(Results.Common,row.names = FALSE, caption = paste("Table 18. - Most Common Words out of ", wordcount, " words."), format = "markdown")
+
+
+
+ggplot(Results.Common, aes(x=reorder(Results.Common$WORD, -Results.Common$FREQ), y=Results.Common$FREQ, fill=Results.Common$WORD)) + 
+  geom_bar(colour="black", stat='identity') + 
+  theme(legend.position="none") +
+   xlab("Words") + ylab("Frequency") +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 5)) +
+  theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
+  ggtitle("20 most common words", subtitle = paste("n=", wordcount))
+
+
+
+wordcloud(words = Results.Common$WORD, freq = Results.Common$FREQ, min.freq = 1,
+          max.words=20, random.order=FALSE, rot.per=0.35, 
+          colors=brewer.pal(8, "Dark2"))
+```
